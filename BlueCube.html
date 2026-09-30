@@ -1,0 +1,3345 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#050810">
+<title>BlueCube — Wealth Tracker</title>
+
+<style>
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+:root {
+  --bg: #050810;
+  --bg-2: #070d17;
+  --card: #0d1524;
+  --card-2: #0f1829;
+  --line: rgba(255, 255, 255, .07);
+  --line-2: rgba(255, 255, 255, .12);
+  --text: #f5f7fb;
+  --text-soft: #dce4f2;
+  --muted: #7d8ba3;
+  --muted-2: #5a6678;
+  --blue: #3b82f6;
+  --blue-2: #69a7ff;
+  --blue-3: #a5c8ff;
+  --green: #35d39a;
+  --green-2: #5ee7b3;
+  --red: #ff5c68;
+  --red-2: #ff8a92;
+  --purple: #a78bfa;
+  --orange: #fb923c;
+
+  --radius: 20px;
+  --radius-sm: 13px;
+  --nav-h: 72px;
+  --shadow: 0 20px 60px rgba(0, 0, 0, .35);
+
+  --spring: cubic-bezier(.34, 1.56, .64, 1);
+  --smooth: cubic-bezier(.22, 1, .36, 1);
+  --ease-out: cubic-bezier(.55, 0, .7, .3);
+}
+
+html, body {
+  overscroll-behavior-y: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(50, 110, 220, .18), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(30, 70, 150, .08), transparent 50%),
+    var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+  line-height: 1.4;
+  padding-bottom: calc(var(--nav-h) + 60px + env(safe-area-inset-bottom));
+}
+
+.app {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 0 16px 24px;
+}
+
+button, .btn, .nav-btn, .list-item, .settings-header,
+.photo-picker, .cat-option, .delete-btn,
+input[type="date"], input[type="number"], input[type="text"] {
+  transition:
+    transform .35s var(--spring),
+    background .25s var(--smooth),
+    border-color .25s var(--smooth),
+    color .25s var(--smooth),
+    box-shadow .35s var(--smooth),
+    opacity .25s var(--smooth);
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  will-change: transform;
+}
+
+button:active, .btn:active, .nav-btn:active, .list-item:active,
+.settings-header:active, .photo-picker:active, .cat-option:active,
+.delete-btn:active {
+  transform: scale(.94);
+  transition-duration: .08s;
+}
+
+button:not(:active), .btn:not(:active), .nav-btn:not(:active),
+.list-item:not(:active), .settings-header:not(:active),
+.photo-picker:not(:active), .cat-option:not(:active),
+.delete-btn:not(:active) {
+  transition-duration: .35s;
+}
+
+.screen { display: none; }
+.screen.active {
+  display: block;
+  animation: screenIn .5s var(--smooth);
+}
+@keyframes screenIn {
+  from { opacity: 0; transform: translateY(10px) scale(.99); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.screen-top-spacer { height: 14px; }
+
+.section-title {
+  font-size: 10.5px;
+  font-weight: 750;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 11px 2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-title::before {
+  content: "";
+  width: 3px;
+  height: 11px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--blue-2), var(--blue));
+  box-shadow: 0 0 8px rgba(59, 130, 246, .4);
+}
+.section-title .count {
+  margin-left: auto;
+  color: var(--muted-2);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .3px;
+  background: rgba(255, 255, 255, .04);
+  padding: 3px 8px;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  text-transform: none;
+}
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius);
+  padding: 24px 20px 20px;
+  background: linear-gradient(160deg, var(--card), var(--bg-2));
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, .04);
+}
+.hero::before {
+  content: "";
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  right: -100px;
+  top: -100px;
+  background: rgba(55, 130, 246, .1);
+  filter: blur(50px);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.hero::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 15%;
+  right: 15%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .12) 50%, transparent);
+  pointer-events: none;
+}
+.hero > * { position: relative; z-index: 1; }
+
+.hero-eyebrow {
+  color: var(--muted);
+  font-size: 9.5px;
+  font-weight: 750;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hero-eyebrow::before {
+  content: "";
+  width: 12px;
+  height: 1.5px;
+  background: linear-gradient(90deg, var(--blue), transparent);
+  border-radius: 2px;
+}
+
+.hero-amount {
+  margin-top: 10px;
+  font-size: 40px;
+  line-height: .95;
+  font-weight: 800;
+  letter-spacing: -2px;
+  background: linear-gradient(135deg, #ffffff, #b8cce8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-variant-numeric: tabular-nums;
+}
+
+.hero-label {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.hero-split {
+  margin-top: 18px;
+  display: flex;
+  gap: 14px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.hero-split-item { flex: 1; min-width: 0; }
+.hero-split-item span {
+  display: block;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+}
+.hero-split-item strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 14px;
+  font-weight: 750;
+  color: var(--text-soft);
+  font-variant-numeric: tabular-nums;
+}
+.hero-split-item strong.green { color: var(--green-2); }
+.hero-split-item strong.blue  { color: var(--blue-2); }
+
+.asset-bar {
+  margin-top: 18px;
+  height: 10px;
+  display: flex;
+  gap: 3px;
+  border-radius: 20px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, .03);
+  position: relative;
+}
+.asset-bar-seg {
+  height: 100%;
+  transition: flex .7s var(--spring);
+  min-width: 3px;
+  position: relative;
+  overflow: hidden;
+}
+.asset-bar-seg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .35), transparent);
+  animation: shine 3s ease-in-out infinite;
+  opacity: .6;
+}
+@keyframes shine {
+  0%, 100% { transform: translateX(-100%); }
+  50%      { transform: translateX(100%); }
+}
+.asset-bar-empty {
+  flex: 1;
+  background: rgba(255, 255, 255, .04);
+  border-radius: 20px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.list-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 14px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(160deg, var(--card), var(--bg-2));
+  border: 1px solid var(--line);
+  position: relative;
+  overflow: hidden;
+  animation: itemIn .4s var(--smooth) backwards;
+}
+.list-item::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 20%;
+  right: 20%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .08), transparent);
+  pointer-events: none;
+}
+.list-item:hover {
+  border-color: var(--line-2);
+  background: linear-gradient(160deg, var(--card-2), var(--bg-2));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .25);
+}
+@keyframes itemIn {
+  from { opacity: 0; transform: translateY(8px) scale(.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.list-item:nth-child(1) { animation-delay: .02s; }
+.list-item:nth-child(2) { animation-delay: .06s; }
+.list-item:nth-child(3) { animation-delay: .10s; }
+.list-item:nth-child(4) { animation-delay: .14s; }
+.list-item:nth-child(5) { animation-delay: .18s; }
+
+.list-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: rgba(255, 255, 255, .04);
+  transition: transform .3s var(--spring);
+}
+.list-icon svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 1.9;
+}
+.list-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 11px;
+}
+.list-item:hover .list-icon { transform: scale(1.05); }
+
+.list-body { flex: 1; min-width: 0; }
+.list-name {
+  font-size: 12.5px;
+  font-weight: 750;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.list-meta {
+  margin-top: 4px;
+  font-size: 9.5px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.tag {
+  padding: 2px 7px;
+  border-radius: 20px;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+}
+.tag-day    { background: rgba(53, 211, 154, .12); color: var(--green-2); border: 1px solid rgba(53, 211, 154, .2); }
+.tag-month  { background: rgba(105, 167, 255, .12); color: var(--blue-2);  border: 1px solid rgba(105, 167, 255, .2); }
+.tag-own    { background: rgba(167, 139, 250, .12); color: var(--purple);  border: 1px solid rgba(167, 139, 250, .2); }
+.tag-capital{ background: rgba(59, 130, 246, .12);  color: var(--blue-2);  border: 1px solid rgba(59, 130, 246, .2); }
+.tag-done   { background: rgba(53, 211, 154, .15); color: var(--green-2); border: 1px solid rgba(53, 211, 154, .3); }
+.tag-fail   { background: rgba(255, 92, 104, .12); color: var(--red-2); border: 1px solid rgba(255, 92, 104, .2); }
+
+.list-value { text-align: right; flex-shrink: 0; }
+.list-value .amount {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--green-2);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.3px;
+}
+.list-value .total {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--text-soft);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.3px;
+}
+.list-value .period {
+  margin-top: 2px;
+  font-size: 8.5px;
+  color: var(--muted-2);
+  font-weight: 700;
+  letter-spacing: .4px;
+  text-transform: uppercase;
+}
+.list-value .accumulated {
+  margin-top: 4px;
+  font-size: 9.5px;
+  font-weight: 800;
+  color: var(--green-2);
+  font-variant-numeric: tabular-nums;
+  padding: 2px 6px;
+  background: rgba(53, 211, 154, .1);
+  border-radius: 6px;
+  display: inline-block;
+}
+
+.delete-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, .03);
+  color: var(--muted-2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-family: inherit;
+  padding: 0;
+}
+.delete-btn svg { width: 13px; height: 13px; stroke-width: 2; pointer-events: none; }
+.delete-btn:hover {
+  background: rgba(255, 92, 104, .1);
+  border-color: rgba(255, 92, 104, .25);
+  color: var(--red);
+}
+
+.empty {
+  padding: 32px 20px;
+  text-align: center;
+  border: 1px dashed var(--line-2);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(160deg, var(--card), var(--bg-2));
+}
+.empty-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 12px;
+  border-radius: 14px;
+  background: rgba(59, 130, 246, .08);
+  border: 1px solid rgba(59, 130, 246, .13);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--blue-2);
+}
+.empty-icon svg { width: 22px; height: 22px; stroke-width: 1.8; }
+.empty-title {
+  font-size: 12.5px;
+  font-weight: 750;
+  color: var(--text-soft);
+}
+.empty-text {
+  margin-top: 6px;
+  font-size: 10.5px;
+  color: var(--muted);
+  line-height: 1.55;
+  max-width: 260px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.btn {
+  border: 0;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-weight: 750;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  letter-spacing: .1px;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary {
+  padding: 14px;
+  background: linear-gradient(105deg, #1d5fd4, #2e7af0, #438fff);
+  color: white;
+  font-size: 13px;
+  width: 100%;
+  box-shadow: 0 8px 24px rgba(35, 105, 235, .25), inset 0 1px 0 rgba(255, 255, 255, .2);
+}
+.btn-primary::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, .25) 50%, transparent 70%);
+  transform: translateX(-100%);
+  transition: transform .7s var(--smooth);
+}
+.btn-primary:hover:not(:disabled)::before { transform: translateX(100%); }
+.btn-primary:hover:not(:disabled) { box-shadow: 0 14px 34px rgba(35, 105, 235, .4); }
+.btn-primary:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btn-add {
+  width: 100%;
+  padding: 14px;
+  background: rgba(59, 130, 246, .07);
+  border: 1px dashed rgba(59, 130, 246, .28);
+  color: var(--blue-2);
+  font-size: 12px;
+  font-weight: 800;
+  border-radius: var(--radius-sm);
+}
+.btn-add:hover {
+  background: rgba(59, 130, 246, .14);
+  border-color: rgba(59, 130, 246, .5);
+  color: var(--blue-3);
+  border-style: solid;
+}
+.btn-add svg { width: 15px; height: 15px; stroke-width: 2.2; }
+
+.btn-ghost {
+  padding: 11px 14px;
+  background: rgba(255, 255, 255, .04);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 11px;
+  border-radius: 11px;
+  font-family: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn-ghost:hover:not(:disabled) {
+  background: rgba(255, 255, 255, .08);
+  color: var(--text-soft);
+  border-color: var(--line-2);
+}
+.btn-ghost:disabled { opacity: .35; cursor: not-allowed; }
+
+.details-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 15px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(160deg, var(--card), var(--bg-2));
+}
+.details-item { flex: 1; min-width: 0; }
+.details-item span {
+  display: block;
+  color: var(--muted-2);
+  font-size: 8.5px;
+  font-weight: 750;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+}
+.details-item strong {
+  display: block;
+  font-size: 11px;
+  font-weight: 750;
+  color: var(--text-soft);
+  margin-top: 5px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.settings-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(160deg, var(--card), var(--bg-2));
+  overflow: hidden;
+}
+.settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 16px;
+  cursor: pointer;
+  user-select: none;
+}
+.settings-header:hover { background: rgba(255, 255, 255, .02); }
+
+.settings-title {
+  font-size: 11.5px;
+  font-weight: 750;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.settings-title::before {
+  content: "";
+  width: 3px;
+  height: 13px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--blue-2), var(--blue));
+  box-shadow: 0 0 8px rgba(59, 130, 246, .4);
+}
+
+.settings-arrow {
+  color: var(--muted);
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .04);
+  transition: transform .35s var(--spring), background .25s, color .25s;
+}
+.settings-arrow svg { width: 13px; height: 13px; stroke-width: 2.2; }
+
+.settings-body {
+  display: none;
+  padding: 2px 16px 16px;
+}
+.settings-body.open {
+  display: block;
+  animation: slideDown .4s var(--smooth);
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.form-group { margin-top: 14px; }
+.form-group:first-child { margin-top: 0; }
+
+.form-label {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+}
+
+.form-input {
+  width: 100%;
+  padding: 13px 14px;
+  border-radius: 11px;
+  border: 1px solid var(--line);
+  outline: none;
+  background: #070d17;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+}
+.form-input:hover { border-color: var(--line-2); }
+.form-input:focus {
+  border-color: rgba(59, 130, 246, .6);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, .12);
+  background: #080e1a;
+}
+.form-input::placeholder { color: var(--muted-2); }
+
+.cat-picker {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+}
+
+.cat-option {
+  padding: 13px 6px;
+  border-radius: 11px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, .03);
+  cursor: pointer;
+  text-align: center;
+  font-family: inherit;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.cat-option:hover {
+  background: rgba(255, 255, 255, .06);
+  border-color: var(--line-2);
+}
+.cat-option.selected {
+  border-color: rgba(59, 130, 246, .5);
+  background: rgba(59, 130, 246, .1);
+  color: var(--blue-2);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, .08);
+}
+.cat-option svg { width: 20px; height: 20px; stroke-width: 1.8; pointer-events: none; }
+
+.cat-label {
+  font-size: 9.5px;
+  font-weight: 750;
+  letter-spacing: .2px;
+  pointer-events: none;
+}
+
+.photo-picker {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px;
+  border-radius: 11px;
+  border: 1px dashed var(--line-2);
+  background: rgba(255, 255, 255, .015);
+  cursor: pointer;
+}
+.photo-picker:hover {
+  background: rgba(255, 255, 255, .03);
+  border-color: rgba(59, 130, 246, .4);
+}
+
+.photo-preview {
+  width: 52px;
+  height: 52px;
+  border-radius: 13px;
+  background: rgba(59, 130, 246, .08);
+  border: 1px solid rgba(59, 130, 246, .15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  color: var(--blue-2);
+}
+.photo-preview svg { width: 22px; height: 22px; stroke-width: 1.8; }
+.photo-preview img { width: 100%; height: 100%; object-fit: cover; }
+
+.photo-picker-text { flex: 1; }
+.photo-picker-text strong {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 750;
+  color: var(--text-soft);
+}
+.photo-picker-text span {
+  display: block;
+  margin-top: 3px;
+  font-size: 9.5px;
+  color: var(--muted);
+}
+
+.photo-input { display: none; }
+
+/* ============================================
+   GRAPHIQUE
+============================================ */
+.chart-card {
+  padding: 18px 16px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(160deg, var(--card), var(--bg-2));
+  position: relative;
+  overflow: hidden;
+}
+.chart-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 15%;
+  right: 15%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .08) 50%, transparent);
+  pointer-events: none;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.chart-title {
+  font-size: 11.5px;
+  font-weight: 750;
+  color: var(--text-soft);
+}
+.chart-sub {
+  margin-top: 3px;
+  font-size: 9px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.chart-delta {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.chart-delta.positive {
+  color: var(--green-2);
+  background: rgba(53, 211, 154, .12);
+  border: 1px solid rgba(53, 211, 154, .25);
+}
+.chart-delta.neutral {
+  color: var(--muted);
+  background: rgba(255, 255, 255, .04);
+  border: 1px solid var(--line);
+}
+
+.chart-container {
+  position: relative;
+  width: 100%;
+  height: 140px;
+}
+
+.chart-container svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.chart-x-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 8.5px;
+  color: var(--muted-2);
+  font-weight: 700;
+  letter-spacing: .3px;
+  text-transform: uppercase;
+}
+
+.chart-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 140px;
+  color: var(--muted-2);
+  font-size: 10.5px;
+  font-weight: 600;
+  text-align: center;
+  padding: 0 20px;
+}
+
+/* ============================================
+   NAV
+============================================ */
+.nav {
+  position: fixed;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  height: var(--nav-h);
+  padding: 6px;
+  background: rgba(28, 28, 30, .72);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .5), inset 0 1px 0 rgba(255, 255, 255, .08);
+  width: calc(100% - 24px);
+  max-width: 460px;
+  overflow: visible;
+}
+
+.nav-btn {
+  flex: 1;
+  height: 100%;
+  background: transparent;
+  border: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: rgba(255, 255, 255, .55);
+  cursor: pointer;
+  border-radius: 100px;
+  position: relative;
+  font-family: inherit;
+  transition: color .25s var(--smooth), background .25s var(--smooth);
+  padding: 4px 2px;
+}
+.nav-btn svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 1.9;
+  transition: transform .35s var(--spring), filter .25s;
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
+}
+.nav-btn .nav-label {
+  font-size: 8.5px;
+  font-weight: 600;
+  letter-spacing: .1px;
+  position: relative;
+  z-index: 1;
+  transition: .2s var(--smooth);
+  pointer-events: none;
+}
+.nav-btn.active {
+  color: #ffffff;
+  background: rgba(255, 255, 255, .08);
+}
+.nav-btn.active svg { filter: drop-shadow(0 0 6px rgba(255, 255, 255, .3)); }
+.nav-btn:active { transform: scale(.92); transition-duration: .08s; }
+
+/* ============================================
+   MODALS
+============================================ */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, .55);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  transition: background .45s var(--smooth), backdrop-filter .45s var(--smooth);
+}
+.modal.show {
+  display: flex;
+  animation: modalFade .35s var(--smooth);
+}
+.modal.closing {
+  display: flex;
+  animation: modalFadeOut .45s var(--smooth) forwards;
+}
+@keyframes modalFade {
+  from { opacity: 0; background: rgba(0, 0, 0, 0); backdrop-filter: blur(0); }
+  to   { opacity: 1; background: rgba(0, 0, 0, .55); backdrop-filter: blur(20px); }
+}
+@keyframes modalFadeOut {
+  from { opacity: 1; background: rgba(0, 0, 0, .55); }
+  to   { opacity: 0; background: rgba(0, 0, 0, 0); }
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 480px;
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+  padding: 22px 20px;
+  border-radius: 24px;
+  background: linear-gradient(160deg, #0e1626, #0a111e);
+  border: 1px solid var(--line-2);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, .65), 0 0 0 1px rgba(255, 255, 255, .04) inset;
+  position: relative;
+  overflow-x: hidden;
+  transform-origin: center center;
+}
+
+.modal-card::-webkit-scrollbar { width: 6px; }
+.modal-card::-webkit-scrollbar-track { background: transparent; }
+.modal-card::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, .1);
+  border-radius: 10px;
+}
+
+.modal.show .modal-card { animation: morphIn .55s var(--spring); }
+@keyframes morphIn {
+  0% { transform: translateY(30%) scale(.6); opacity: 0; border-radius: 80px; }
+  40% { opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; border-radius: 24px; }
+}
+
+.modal.closing .modal-card { animation: morphOut .45s var(--ease-out) forwards; }
+@keyframes morphOut {
+  0% { transform: translateY(0) scale(1); opacity: 1; border-radius: 24px; }
+  100% { transform: translateY(30%) scale(.6); opacity: 0; border-radius: 80px; }
+}
+
+.modal-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 20%;
+  right: 20%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .2) 50%, transparent);
+  pointer-events: none;
+}
+
+.modal-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, .18);
+  margin: 0 auto 16px;
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -.4px;
+}
+.modal-sub {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.modal-text {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 11.5px;
+  line-height: 1.65;
+}
+.modal-text strong {
+  color: var(--text-soft);
+  font-weight: 750;
+}
+
+.modal-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 18px;
+}
+.modal-actions button {
+  padding: 13px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  font-size: 11.5px;
+  font-weight: 750;
+  cursor: pointer;
+  font-family: inherit;
+  position: relative;
+  overflow: hidden;
+}
+
+.cancel {
+  background: rgba(255, 255, 255, .04);
+  color: #aeb9c9;
+}
+.cancel:hover {
+  background: rgba(255, 255, 255, .08);
+  color: var(--text-soft);
+}
+
+.confirm {
+  background: linear-gradient(105deg, #1d5fd4, #2e7af0);
+  color: white;
+  border-color: transparent !important;
+  box-shadow: 0 6px 18px rgba(35, 105, 235, .25), inset 0 1px 0 rgba(255, 255, 255, .2);
+}
+.confirm.danger-confirm {
+  background: linear-gradient(105deg, #b3313e, #d94452);
+  box-shadow: 0 6px 18px rgba(179, 49, 62, .25);
+}
+
+.toast {
+  position: fixed;
+  z-index: 60;
+  left: 50%;
+  bottom: calc(var(--nav-h) + 40px + env(safe-area-inset-bottom));
+  transform: translate(-50%, 20px) scale(.9);
+  opacity: 0;
+  pointer-events: none;
+  padding: 12px 18px;
+  border-radius: 14px;
+  background: linear-gradient(160deg, #151f30, #101828);
+  border: 1px solid var(--line-2);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, .5), inset 0 1px 0 rgba(255, 255, 255, .08);
+  transition: opacity .3s var(--smooth), transform .5s var(--spring);
+  white-space: nowrap;
+  letter-spacing: .1px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100vw - 32px);
+}
+.toast::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--blue-2);
+  box-shadow: 0 0 10px var(--blue-2);
+  flex-shrink: 0;
+}
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
+}
+
+@media (max-width: 380px) {
+  .app { padding: 0 12px 24px; }
+  .hero-amount { font-size: 36px; letter-spacing: -2px; }
+  .nav { max-width: 360px; }
+  .nav-btn svg { width: 18px; height: 18px; }
+  .nav-btn .nav-label { font-size: 7.5px; }
+  .modal { padding: 12px; }
+  .modal-card { padding: 20px 16px; border-radius: 20px; }
+  .chart-container { height: 120px; }
+}
+
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .1); border-radius: 10px; }
+::selection { background: rgba(59, 130, 246, .3); color: white; }
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <!-- ============================================ -->
+  <!-- ENTREPRISES -->
+  <!-- ============================================ -->
+  <section class="screen" id="screen-business">
+    <div class="screen-top-spacer"></div>
+
+    <div class="hero">
+      <div class="hero-eyebrow">Revenus entreprises</div>
+      <div class="hero-amount" id="bizTotal">$0</div>
+      <div class="hero-label">Généré par jour</div>
+      <div class="hero-split">
+        <div class="hero-split-item"><span>Entreprises</span><strong class="blue" id="bizCountSub">0</strong></div>
+        <div class="hero-split-item"><span>Par mois</span><strong class="green" id="bizMonthly">+$0</strong></div>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;">
+      <div class="section-title">Mes entreprises <span class="count" id="bizCountLabel">0</span></div>
+    </div>
+
+    <div class="list" id="bizList"></div>
+
+    <button class="btn btn-add" onclick="openAddModal('business', event)" style="margin-top:12px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Ajouter une entreprise
+    </button>
+  </section>
+
+
+  <!-- ============================================ -->
+  <!-- LOCATIONS -->
+  <!-- ============================================ -->
+  <section class="screen" id="screen-rental">
+    <div class="screen-top-spacer"></div>
+
+    <div class="hero">
+      <div class="hero-eyebrow">Revenus locatifs</div>
+      <div class="hero-amount" id="rentTotal">$0</div>
+      <div class="hero-label">Généré par mois</div>
+      <div class="hero-split">
+        <div class="hero-split-item"><span>Biens loués</span><strong class="blue" id="rentCountSub">0</strong></div>
+        <div class="hero-split-item"><span>Par an</span><strong class="green" id="rentYearly">+$0</strong></div>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;">
+      <div class="section-title">Mes biens en location <span class="count" id="rentCountLabel">0</span></div>
+    </div>
+
+    <div class="list" id="rentList"></div>
+
+    <button class="btn btn-add" onclick="openAddModal('rental', event)" style="margin-top:12px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Ajouter une location
+    </button>
+  </section>
+
+
+  <!-- ============================================ -->
+  <!-- ACCUEIL -->
+  <!-- ============================================ -->
+  <section class="screen active" id="screen-home">
+    <div class="screen-top-spacer"></div>
+
+    <div class="hero">
+      <div class="hero-eyebrow">Fortune totale</div>
+      <div class="hero-amount" id="heroWealth">$0</div>
+      <div class="hero-label">Patrimoine net cumulé</div>
+      <div class="hero-split">
+        <div class="hero-split-item"><span>Revenus / jour</span><strong class="green" id="heroDaily">+$0</strong></div>
+        <div class="hero-split-item"><span>Revenus / mois</span><strong class="blue" id="heroMonthly">+$0</strong></div>
+      </div>
+      <div class="asset-bar" id="assetBar"></div>
+    </div>
+
+    <!-- Graphique d'évolution -->
+    <div style="margin-top:20px;">
+      <div class="section-title">Évolution de la fortune</div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">30 derniers jours</div>
+          <div class="chart-sub" id="chartSub">Aucune donnée</div>
+        </div>
+        <div class="chart-delta neutral" id="chartDelta">$0</div>
+      </div>
+      <div class="chart-container" id="chartContainer">
+        <div class="chart-empty">Les données apparaîtront au fil du temps</div>
+      </div>
+      <div class="chart-x-labels">
+        <span>-30j</span>
+        <span>-20j</span>
+        <span>-10j</span>
+        <span>Aujourd'hui</span>
+      </div>
+    </div>
+
+    <div style="margin-top:22px;">
+      <div class="section-title">Répartition</div>
+    </div>
+
+    <div class="list">
+      <div class="list-item">
+        <div class="list-icon" style="background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);color:var(--blue-2);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2h2v-4h-2c0-1-.5-1.5-1-2V5z"/>
+            <path d="M2 9v1c0 1.1.9 2 2 2h1"/><path d="M16 11h.01"/>
+          </svg>
+        </div>
+        <div class="list-body">
+          <div class="list-name">Épargne</div>
+          <div class="list-meta"><span class="tag tag-capital">Capital</span></div>
+        </div>
+        <div class="list-value"><div class="total" id="homeSavings">$0</div><div class="period">Épargne</div></div>
+      </div>
+
+      <div class="list-item">
+        <div class="list-icon" style="background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.2);color:var(--purple);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 7h-9"/><path d="M14 17H5"/>
+            <circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/>
+          </svg>
+        </div>
+        <div class="list-body">
+          <div class="list-name">Actifs</div>
+          <div class="list-meta"><span class="tag tag-own">Possédé</span></div>
+        </div>
+        <div class="list-value"><div class="total" id="homeAssets">$0</div><div class="period">Valeur</div></div>
+      </div>
+
+      <div class="list-item">
+        <div class="list-icon" style="background:rgba(53,211,154,.1);border:1px solid rgba(53,211,154,.2);color:var(--green-2);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="7" width="20" height="14" rx="2"/>
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><path d="M2 13h20"/>
+          </svg>
+        </div>
+        <div class="list-body">
+          <div class="list-name">Entreprises</div>
+          <div class="list-meta"><span class="tag tag-day">Par jour</span><span id="homeBizCount">0</span></div>
+        </div>
+        <div class="list-value"><div class="amount" id="homeBizDaily">+$0</div><div class="period">/ jour</div></div>
+      </div>
+
+      <div class="list-item">
+        <div class="list-icon" style="background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.2);color:var(--orange);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/>
+            <path d="M9 9v.01"/><path d="M9 12v.01"/><path d="M9 15v.01"/><path d="M9 18v.01"/>
+          </svg>
+        </div>
+        <div class="list-body">
+          <div class="list-name">Locations</div>
+          <div class="list-meta"><span class="tag tag-month">Par mois</span><span id="homeRentCount">0</span></div>
+        </div>
+        <div class="list-value"><div class="amount" id="homeRentMonthly">+$0</div><div class="period">/ mois</div></div>
+      </div>
+
+      <div class="list-item" style="background:linear-gradient(160deg,rgba(53,211,154,.06),rgba(59,130,246,.03));border-color:rgba(53,211,154,.18);">
+        <div class="list-icon" style="background:rgba(53,211,154,.12);border:1px solid rgba(53,211,154,.25);color:var(--green-2);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+        </div>
+        <div class="list-body">
+          <div class="list-name">Revenus accumulés</div>
+          <div class="list-meta"><span>Total en temps réel</span></div>
+        </div>
+        <div class="list-value"><div class="amount" id="homeAccumulated">+$0</div><div class="period">cumulés</div></div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================================ -->
+  <!-- ÉPARGNE -->
+  <!-- ============================================ -->
+  <section class="screen" id="screen-savings">
+    <div class="screen-top-spacer"></div>
+
+    <div class="hero">
+      <div class="hero-eyebrow">Challenge en cours</div>
+      <div class="hero-amount" id="saved">$0</div>
+      <div class="hero-label">sur <strong id="targetSmall" style="color:var(--text-soft);">$1 500</strong> · objectif</div>
+
+      <div class="asset-bar" style="margin-top:16px;height:8px;">
+        <div class="asset-bar-seg" id="progressBar" style="background:linear-gradient(90deg,#1d6ae8,#76b4ff);border-radius:20px;width:0%;"></div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;margin-top:9px;font-size:10px;color:var(--muted);font-weight:600;font-variant-numeric:tabular-nums;">
+        <span id="percent">0 % accompli</span>
+        <span id="remaining">$1 500 restants</span>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:16px;">
+        <div style="padding:12px 10px;border-radius:11px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);">
+          <div style="color:var(--muted);font-size:8.5px;font-weight:750;letter-spacing:.5px;text-transform:uppercase;">Jour</div>
+          <div style="margin-top:6px;font-size:15px;font-weight:800;color:var(--blue-2);font-variant-numeric:tabular-nums;" id="currentDay">0</div>
+        </div>
+        <div style="padding:12px 10px;border-radius:11px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);">
+          <div style="color:var(--muted);font-size:8.5px;font-weight:750;letter-spacing:.5px;text-transform:uppercase;">Restants</div>
+          <div style="margin-top:6px;font-size:15px;font-weight:800;color:var(--purple);font-variant-numeric:tabular-nums;" id="daysLeft">500</div>
+        </div>
+        <div style="padding:12px 10px;border-radius:11px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);">
+          <div style="color:var(--muted);font-size:8.5px;font-weight:750;letter-spacing:.5px;text-transform:uppercase;">/ jour</div>
+          <div style="margin-top:6px;font-size:15px;font-weight:800;color:var(--green-2);font-variant-numeric:tabular-nums;" id="daily">$3</div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="validateBtn" onclick="validateDay()" style="margin-top:14px;">
+        Valider le jour 1
+      </button>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
+        <button class="btn btn-ghost" id="undoBtn" onclick="requestUndo(event)" style="width:100%;">Annuler la dernière</button>
+        <button class="btn btn-ghost" onclick="openResetModal(event)" style="width:100%;color:var(--red-2);">Réinitialiser</button>
+      </div>
+    </div>
+
+    <div style="margin-top:22px;">
+      <div class="section-title">Détails</div>
+    </div>
+
+    <div class="details-row">
+      <div class="details-item"><span>Début</span><strong id="startDate">01/10/2026</strong></div>
+      <div class="details-item"><span>Fin prévue</span><strong id="endDate">12/02/2028</strong></div>
+      <div class="details-item"><span>Reste</span><strong id="moneyRemaining">$1 500</strong></div>
+    </div>
+
+    <div class="settings-card" id="settings" style="margin-top:12px;">
+      <div class="settings-header" onclick="toggleSettings()">
+        <div class="settings-title">Paramètres du challenge</div>
+        <div class="settings-arrow" id="settingsArrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="settings-body" id="settingsBody">
+        <div class="form-group">
+          <label class="form-label">Objectif total ($)</label>
+          <input id="targetInput" class="form-input" type="number" min="1" step="1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Montant par jour ($)</label>
+          <input id="dailyInput" class="form-input" type="number" min="0.01" step="0.01">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date de commencement</label>
+          <input id="startInput" class="form-input" type="date">
+        </div>
+        <button class="btn btn-add" onclick="saveSettings()" style="margin-top:14px;">Enregistrer les paramètres</button>
+
+        <div class="form-group" style="margin-top:18px;padding-top:16px;border-top:1px solid var(--line);">
+          <label class="form-label">Notifications</label>
+          <button class="btn btn-ghost" id="notifBtn" onclick="requestNotifPermission()" style="width:100%;padding:13px;">
+            Activer les notifications
+          </button>
+          <div style="margin-top:8px;font-size:9.5px;color:var(--muted);line-height:1.5;">
+            Reçois une alerte quand ton challenge est terminé, même si l'app est fermée.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ============================================ -->
+  <!-- ACTIFS -->
+  <!-- ============================================ -->
+  <section class="screen" id="screen-assets">
+    <div class="screen-top-spacer"></div>
+
+    <div class="hero">
+      <div class="hero-eyebrow">Fortune cumulée</div>
+      <div class="hero-amount" id="assetTotal">$0</div>
+      <div class="hero-label">Valeur totale des actifs</div>
+      <div class="hero-split">
+        <div class="hero-split-item"><span>Actifs</span><strong class="blue" id="assetCountSub">0</strong></div>
+        <div class="hero-split-item"><span>Fortune totale</span><strong class="green" id="assetFortune">$0</strong></div>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;">
+      <div class="section-title">Progression de la fortune</div>
+    </div>
+
+    <div class="list" id="fortuneBreakdown"></div>
+
+    <div style="margin-top:20px;">
+      <div class="section-title">Mes possessions <span class="count" id="assetCountLabel">0</span></div>
+    </div>
+
+    <div class="list" id="assetList"></div>
+
+    <button class="btn btn-add" onclick="openAddModal('asset', event)" style="margin-top:12px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Ajouter un actif
+    </button>
+  </section>
+
+
+  <!-- ============================================ -->
+  <!-- HISTORIQUE -->
+  <!-- ============================================ -->
+  <section class="screen" id="screen-history">
+    <div class="screen-top-spacer"></div>
+
+    <div class="hero">
+      <div class="hero-eyebrow">Historique</div>
+      <div class="hero-amount" id="historyTotal">0</div>
+      <div class="hero-label">challenge(s) terminé(s)</div>
+      <div class="hero-split">
+        <div class="hero-split-item"><span>Total économisé</span><strong class="green" id="historySaved">$0</strong></div>
+        <div class="hero-split-item"><span>Réussis</span><strong class="blue" id="historySuccess">0</strong></div>
+      </div>
+    </div>
+
+    <div style="margin-top:20px;">
+      <div class="section-title">Challenges passés <span class="count" id="historyCount">0</span></div>
+    </div>
+
+    <div class="list" id="historyList"></div>
+  </section>
+
+</div>
+
+
+<!-- ============================================ -->
+<!-- NAV -->
+<!-- ============================================ -->
+<nav class="nav">
+  <button class="nav-btn" data-screen="business" onclick="switchScreen('business')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="7" width="20" height="14" rx="2"/>
+      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><path d="M2 13h20"/>
+    </svg>
+    <span class="nav-label">Entrep.</span>
+  </button>
+  <button class="nav-btn" data-screen="rental" onclick="switchScreen('rental')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/>
+      <path d="M9 9v.01"/><path d="M9 12v.01"/><path d="M9 15v.01"/><path d="M9 18v.01"/>
+    </svg>
+    <span class="nav-label">Locations</span>
+  </button>
+  <button class="nav-btn active" data-screen="home" onclick="switchScreen('home')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+    </svg>
+    <span class="nav-label">Accueil</span>
+  </button>
+  <button class="nav-btn" data-screen="savings" onclick="switchScreen('savings')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2h2v-4h-2c0-1-.5-1.5-1-2V5z"/>
+      <path d="M2 9v1c0 1.1.9 2 2 2h1"/><path d="M16 11h.01"/>
+    </svg>
+    <span class="nav-label">Épargne</span>
+  </button>
+  <button class="nav-btn" data-screen="assets" onclick="switchScreen('assets')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 7h-9"/><path d="M14 17H5"/>
+      <circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/>
+    </svg>
+    <span class="nav-label">Actifs</span>
+  </button>
+  <button class="nav-btn" data-screen="history" onclick="switchScreen('history')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+      <path d="M3 3v5h5"/>
+      <path d="M12 7v5l4 2"/>
+    </svg>
+    <span class="nav-label">Histo.</span>
+  </button>
+</nav>
+
+
+<!-- ============================================ -->
+<!-- ADD MODAL -->
+<!-- ============================================ -->
+<div class="modal" id="addModal">
+  <div class="modal-card">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="addModalTitle">Ajouter</div>
+    <div class="modal-sub" id="addModalSub">Remplis les informations ci-dessous</div>
+
+    <div class="form-group" style="margin-top:16px;">
+      <label class="form-label">Photo</label>
+      <div class="photo-picker" onclick="document.getElementById('photoInput').click()">
+        <div class="photo-preview" id="photoPreview">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+          </svg>
+        </div>
+        <div class="photo-picker-text">
+          <strong>Choisir une image</strong>
+          <span>JPG, PNG · optionnel</span>
+        </div>
+      </div>
+      <input type="file" id="photoInput" class="photo-input" accept="image/*" onchange="handlePhoto(this)">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" id="nameLabel">Nom</label>
+      <input type="text" id="addName" class="form-input" placeholder="Ex: Ma maison" maxlength="40">
+    </div>
+
+    <div class="form-group" id="catGroup" style="display:none;">
+      <label class="form-label">Catégorie</label>
+      <div class="cat-picker" id="catPicker"></div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" id="amountLabel">Montant</label>
+      <input type="number" id="addAmount" class="form-input" placeholder="0.00" min="0" step="0.01">
+    </div>
+
+    <div class="form-group" id="valueGroup" style="display:none;">
+      <label class="form-label">Valeur estimée ($)</label>
+      <input type="number" id="addValue" class="form-input" placeholder="0.00" min="0" step="0.01">
+    </div>
+
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeModal('addModal', event)">Annuler</button>
+      <button class="confirm" onclick="confirmAdd(event)">Ajouter</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================ -->
+<!-- MODAL RESET -->
+<!-- ============================================ -->
+<div class="modal" id="resetModal">
+  <div class="modal-card">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Terminer ce challenge ?</div>
+    <div class="modal-text">
+      Ce challenge d'épargne va être clôturé et <strong>ajouté à l'historique</strong> :<br><br>
+      • Épargne actuelle : <strong id="resetSavedPreview">$0</strong><br>
+      • Jour atteint : <strong id="resetDayPreview">0</strong>
+      <br><br>
+      Tes <strong>entreprises</strong>, <strong>locations</strong> et <strong>actifs</strong> ne seront <strong style="color:var(--green-2);">pas touchés</strong>.
+      <br><br>
+      Tu pourras configurer un nouveau challenge juste après.
+    </div>
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeModal('resetModal', event)">Annuler</button>
+      <button class="confirm" onclick="secondResetConfirm(event)">Terminer</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================ -->
+<!-- MODAL NOUVEAU CHALLENGE -->
+<!-- ============================================ -->
+<div class="modal" id="resetFinalModal">
+  <div class="modal-card">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Nouveau challenge</div>
+    <div class="modal-sub">Configure ton nouvel objectif d'épargne</div>
+
+    <div class="form-group" style="margin-top:16px;">
+      <label class="form-label">Objectif total ($)</label>
+      <input id="newTargetInput" class="form-input" type="number" min="1" step="1" placeholder="1500">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Montant par jour ($)</label>
+      <input id="newDailyInput" class="form-input" type="number" min="0.01" step="0.01" placeholder="3">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Date de commencement</label>
+      <input id="newStartInput" class="form-input" type="date">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Épargne de départ ($)</label>
+      <input id="newSavedInput" class="form-input" type="number" min="0" step="0.01" placeholder="0">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Jour de départ</label>
+      <input id="newDayInput" class="form-input" type="number" min="0" step="1" placeholder="0">
+    </div>
+
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeModal('resetFinalModal', event)">Annuler</button>
+      <button class="confirm" onclick="startNewChallenge()">Démarrer</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================ -->
+<!-- MODAL CHALLENGE RÉUSSI -->
+<!-- ============================================ -->
+<div class="modal" id="successModal">
+  <div class="modal-card">
+    <div class="modal-handle"></div>
+    <div style="text-align:center;padding:10px 0 4px;">
+      <div style="width:64px;height:64px;margin:0 auto 16px;border-radius:20px;background:linear-gradient(135deg,rgba(53,211,154,.2),rgba(59,130,246,.15));border:1px solid rgba(53,211,154,.4);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 32px rgba(53,211,154,.3);">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#5ee7b3" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:32px;height:32px;">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+      <div class="modal-title" style="font-size:22px;color:var(--green-2);">Challenge réussi ! 🎉</div>
+      <div class="modal-text" style="margin-top:14px;">
+        Tu as atteint ton objectif de <strong id="successTarget">$1 500</strong><br>
+        en <strong id="successDays">500</strong> jours.
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeModal('successModal', event)">Plus tard</button>
+      <button class="confirm" onclick="startNewFromSuccess(event)">Nouveau challenge</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================ -->
+<!-- MODAL UNDO -->
+<!-- ============================================ -->
+<div class="modal" id="undoModal">
+  <div class="modal-card">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Annuler la dernière validation ?</div>
+    <div class="modal-text" id="undoText">
+      Cette action retirera la dernière épargne validée.
+    </div>
+    <div class="modal-actions">
+      <button class="cancel" onclick="closeModal('undoModal', event)">Garder</button>
+      <button class="confirm" onclick="undoDay()">Annuler</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="toast" id="toast"></div>
+
+
+<script>
+/* ============================================
+   STORAGE KEYS
+============================================ */
+const K = {
+  target: "bluecube_target",
+  daily: "bluecube_daily",
+  saved: "bluecube_saved",
+  day: "bluecube_day",
+  start: "bluecube_start",
+  lastValidation: "bluecube_last_validation",
+  prevSaved: "bluecube_previous_saved",
+  prevDay: "bluecube_previous_day",
+  prevDate: "bluecube_previous_date",
+  businesses: "bluecube_businesses",
+  rentals: "bluecube_rentals",
+  assets: "bluecube_assets",
+  lastTick: "bluecube_last_tick",
+  history: "bluecube_history",
+  wealthHistory: "bluecube_wealth_history",
+  notifAsked: "bluecube_notif_asked"
+};
+
+const DEFAULT_TARGET = 1500;
+const DEFAULT_DAILY = 3;
+const DEFAULT_SAVED = 0;
+const DEFAULT_DAY = 0;
+const DEFAULT_START = "2026-10-01";
+
+const MS_PER_DAY = 1000 * 60 * 60 * 24;
+const MS_PER_MONTH = MS_PER_DAY * 30;
+
+const PHOTO_MAX_SIZE = 300;
+const PHOTO_QUALITY = 0.7;
+
+// Nombre max de points d'historique de fortune (1 tous les 1h max)
+const MAX_WEALTH_HISTORY = 200;
+
+
+/* ============================================
+   SVG ICONS
+============================================ */
+const ICONS = {
+  business: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><path d="M2 13h20"/></svg>`,
+  rental:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/><path d="M9 9v.01"/><path d="M9 12v.01"/><path d="M9 15v.01"/><path d="M9 18v.01"/></svg>`,
+  savings:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2h2v-4h-2c0-1-.5-1.5-1-2V5z"/><path d="M2 9v1c0 1.1.9 2 2 2h1"/><path d="M16 11h.01"/></svg>`,
+  asset:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-9"/><path d="M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg>`,
+  trash:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>`,
+  house:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
+  apartment:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>`,
+  car:      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"/><circle cx="6.5" cy="16.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/></svg>`,
+  moto:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M15 6h3l2 5"/><path d="M9 17.5 12 12l-4-2H4"/></svg>`,
+  land:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>`,
+  plane:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>`,
+  boat:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M2 21c.5-1 1.5-2 3-2 2 0 3 2 5 2s3-2 5-2 3 2 5 2c1.5 0 2.5-1 3-2"/><path d="M4 18V8l8-4 8 4v10"/><path d="M12 4v14"/></svg>`,
+  watch:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="6"/><polyline points="12 10 12 12 13 13"/><path d="m16.13 7.66-.81-4.05a2 2 0 0 0-2-1.61h-2.68a2 2 0 0 0-2 1.61l-.78 4.05"/><path d="m7.88 16.36.8 4a2 2 0 0 0 2 1.61h2.72a2 2 0 0 0 2-1.61l.81-4.05"/></svg>`,
+  gem:      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 18 3 22 9 12 22 2 9"/><path d="M6 3l6 6 6-6"/><path d="M2 9h20"/><path d="M12 22l-4-13"/><path d="M12 22l4-13"/></svg>`,
+  box:      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>`,
+  trend:    `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`,
+  trophy:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>`,
+  history:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>`
+};
+
+
+/* ============================================
+   UTILS
+============================================ */
+function getNumber(key, fallback) {
+  const v = localStorage.getItem(key);
+  if (v === null || v === "") return fallback;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function getJSON(key, fallback) {
+  try {
+    const v = localStorage.getItem(key);
+    if (!v) return fallback;
+    const parsed = JSON.parse(v);
+    return Array.isArray(parsed) ? parsed : fallback;
+  } catch (e) { return fallback; }
+}
+
+function saveJSON(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+
+function money(v) {
+  const n = Number(v) || 0;
+  const abs = Math.abs(n);
+  let decimals = 2;
+  if (abs >= 1000) decimals = 0;
+  else if (abs >= 100) decimals = Number.isInteger(n) ? 0 : 2;
+  else if (Number.isInteger(n)) decimals = 0;
+  return "$" + n.toLocaleString("en-US", {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: 2
+  });
+}
+
+function formatDate(date) {
+  return date.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
+function formatDateShort(date) {
+  return date.toLocaleDateString("fr-FR", { day: "2-digit", month: "short" });
+}
+
+function getToday() {
+  const d = new Date();
+  return d.getFullYear() + "-" +
+    String(d.getMonth() + 1).padStart(2, "0") + "-" +
+    String(d.getDate()).padStart(2, "0");
+}
+
+function escapeHTML(str) {
+  return String(str).replace(/[&<>"']/g, m => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[m]));
+}
+
+function haptic(type) {
+  if (!navigator.vibrate) return;
+  try {
+    if (type === "light") navigator.vibrate(8);
+    else if (type === "medium") navigator.vibrate(15);
+    else if (type === "heavy") navigator.vibrate([10, 30, 10]);
+  } catch (e) {}
+}
+
+
+/* ============================================
+   COMPRESSION D'IMAGE
+============================================ */
+function compressImage(dataUrl, maxSize, quality) {
+  return new Promise((resolve) => {
+    if (!dataUrl || !dataUrl.startsWith("data:image")) {
+      return resolve(dataUrl || "");
+    }
+
+    const img = new Image();
+    img.onload = () => {
+      let w = img.width;
+      let h = img.height;
+
+      if (w > h && w > maxSize) {
+        h = Math.round(h * maxSize / w);
+        w = maxSize;
+      } else if (h > maxSize) {
+        w = Math.round(w * maxSize / h);
+        h = maxSize;
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, w, h);
+      ctx.drawImage(img, 0, 0, w, h);
+
+      try {
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      } catch (e) {
+        resolve(dataUrl);
+      }
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
+
+/* ============================================
+   DATA
+============================================ */
+let target = getNumber(K.target, DEFAULT_TARGET);
+let daily = getNumber(K.daily, DEFAULT_DAILY);
+let saved = getNumber(K.saved, DEFAULT_SAVED);
+let currentDay = getNumber(K.day, DEFAULT_DAY);
+let startDate = localStorage.getItem(K.start) || DEFAULT_START;
+let lastValidation = localStorage.getItem(K.lastValidation) || "";
+
+let businesses = getJSON(K.businesses, []);
+let rentals = getJSON(K.rentals, []);
+let assets = getJSON(K.assets, []);
+let challengeHistory = getJSON(K.history, []);
+let wealthHistory = getJSON(K.wealthHistory, []);
+
+businesses.forEach(b => { if (typeof b.accumulated !== "number") b.accumulated = 0; });
+rentals.forEach(r => { if (typeof r.accumulated !== "number") r.accumulated = 0; });
+
+
+/* ============================================
+   NOTIFICATIONS
+============================================ */
+async function requestNotifPermission() {
+  if (!("Notification" in window)) {
+    showToast("Notifications non supportées");
+    return;
+  }
+
+  if (Notification.permission === "granted") {
+    showToast("Notifications déjà activées");
+    updateNotifButton();
+    return;
+  }
+
+  if (Notification.permission === "denied") {
+    showToast("Notifications bloquées dans le navigateur");
+    return;
+  }
+
+  try {
+    const perm = await Notification.requestPermission();
+    localStorage.setItem(K.notifAsked, "1");
+    updateNotifButton();
+
+    if (perm === "granted") {
+      showToast("Notifications activées !");
+      // Notification de test
+      sendNotification(
+        "BlueCube",
+        "Les notifications sont activées. Tu seras prévenu à la fin de ton challenge."
+      );
+    } else {
+      showToast("Notifications refusées");
+    }
+  } catch (e) {
+    console.error(e);
+    showToast("Erreur lors de la demande");
+  }
+}
+
+function sendNotification(title, body) {
+  if (!("Notification" in window)) return;
+  if (Notification.permission !== "granted") return;
+
+  try {
+    const notif = new Notification(title, {
+      body: body,
+      icon: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%233b82f6'/><path d='M25 30 L50 20 L75 30 L75 70 L50 80 L25 70 Z' fill='white'/></svg>",
+      badge: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%233b82f6'/></svg>",
+      tag: "bluecube-challenge",
+      renotify: true
+    });
+
+    notif.onclick = () => {
+      window.focus();
+      notif.close();
+    };
+  } catch (e) {
+    console.warn("Notification error:", e);
+  }
+}
+
+function updateNotifButton() {
+  const btn = document.getElementById("notifBtn");
+  if (!btn) return;
+
+  if (!("Notification" in window)) {
+    btn.textContent = "Non supporté";
+    btn.disabled = true;
+    return;
+  }
+
+  if (Notification.permission === "granted") {
+    btn.textContent = "✓ Notifications activées";
+    btn.style.color = "var(--green-2)";
+    btn.style.borderColor = "rgba(53,211,154,.3)";
+    btn.disabled = true;
+  } else if (Notification.permission === "denied") {
+    btn.textContent = "Notifications bloquées";
+    btn.style.color = "var(--red-2)";
+    btn.disabled = true;
+  } else {
+    btn.textContent = "Activer les notifications";
+    btn.disabled = false;
+  }
+}
+
+
+/* ============================================
+   HISTORIQUE DE FORTUNE
+============================================ */
+function recordWealthPoint() {
+  const w = calcWealth();
+  const now = Date.now();
+
+  // On enregistre max 1 point toutes les 30 minutes
+  const last = wealthHistory[wealthHistory.length - 1];
+  if (last && (now - last.t) < 30 * 60 * 1000) {
+    // On met juste à jour le dernier point
+    last.v = w.totalWealth;
+    return;
+  }
+
+  wealthHistory.push({ t: now, v: w.totalWealth });
+
+  // On garde seulement les 200 derniers points
+  if (wealthHistory.length > MAX_WEALTH_HISTORY) {
+    wealthHistory = wealthHistory.slice(-MAX_WEALTH_HISTORY);
+  }
+}
+
+
+/* ============================================
+   REVENUS AUTOMATIQUES
+============================================ */
+function applyAutomaticIncome() {
+  const now = Date.now();
+  let lastTick = Number(localStorage.getItem(K.lastTick));
+
+  if (!lastTick || lastTick <= 0 || now < lastTick) {
+    localStorage.setItem(K.lastTick, String(now));
+    return;
+  }
+
+  const elapsedMs = now - lastTick;
+  if (elapsedMs < 1000) return;
+
+  const elapsedDays = elapsedMs / MS_PER_DAY;
+  const elapsedMonths = elapsedMs / MS_PER_MONTH;
+
+  let totalEarned = 0;
+
+  businesses.forEach(b => {
+    const rate = Number(b.amount) || 0;
+    if (rate <= 0) return;
+    const gained = rate * elapsedDays;
+    b.accumulated = (Number(b.accumulated) || 0) + gained;
+    totalEarned += gained;
+  });
+
+  rentals.forEach(r => {
+    const rate = Number(r.amount) || 0;
+    if (rate <= 0) return;
+    const gained = rate * elapsedMonths;
+    r.accumulated = (Number(r.accumulated) || 0) + gained;
+    totalEarned += gained;
+  });
+
+  if (totalEarned > 0.0001) {
+    saved += totalEarned;
+    saveAll();
+  }
+
+  localStorage.setItem(K.lastTick, String(now));
+}
+
+
+/* ============================================
+   SCREEN NAV
+============================================ */
+let currentScreen = "home";
+
+function switchScreen(name) {
+  if (name === currentScreen) return;
+  haptic("light");
+  currentScreen = name;
+
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  const el = document.getElementById("screen-" + name);
+  if (el) el.classList.add("active");
+
+  document.querySelectorAll(".nav-btn").forEach(b => {
+    b.classList.toggle("active", b.dataset.screen === name);
+  });
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+
+/* ============================================
+   MORPH TRANSITION
+============================================ */
+let morphOrigin = { x: 50, y: 50 };
+
+function captureMorphOrigin(event) {
+  if (!event || !event.currentTarget) return;
+  const el = event.currentTarget;
+  const rect = el.getBoundingClientRect();
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+
+  morphOrigin.x = ((rect.left + rect.width / 2) / vw) * 100;
+  morphOrigin.y = ((rect.top + rect.height / 2) / vh) * 100;
+}
+
+function applyMorphOrigin(cardEl) {
+  if (!cardEl) return;
+  cardEl.style.transformOrigin = `${morphOrigin.x}% ${morphOrigin.y}%`;
+}
+
+
+/* ============================================
+   MODAL HELPERS
+============================================ */
+function openModal(modalId, event) {
+  captureMorphOrigin(event);
+  const modal = document.getElementById(modalId);
+  const card = modal.querySelector(".modal-card");
+  applyMorphOrigin(card);
+
+  modal.classList.remove("closing");
+  modal.classList.add("show");
+
+  if (card) {
+    card.style.animation = "none";
+    void card.offsetWidth;
+    card.style.animation = "";
+  }
+}
+
+function closeModal(modalId, event) {
+  const modal = document.getElementById(modalId);
+  if (!modal) return;
+
+  if (event && event.currentTarget) {
+    captureMorphOrigin(event);
+    const card = modal.querySelector(".modal-card");
+    applyMorphOrigin(card);
+  }
+
+  haptic("light");
+
+  modal.classList.remove("show");
+  modal.classList.add("closing");
+
+  setTimeout(() => {
+    modal.classList.remove("closing");
+  }, 460);
+}
+
+
+/* ============================================
+   CALCULS
+============================================ */
+function calcSavings() {
+  const remainingMoney = Math.max(0, target - saved);
+  const remainingDays = daily > 0 ? Math.ceil(remainingMoney / daily) : 0;
+  const totalDays = daily > 0 ? Math.ceil(target / daily) : 0;
+  const percentage = target > 0 ? Math.min(100, (saved / target) * 100) : 0;
+  const start = new Date(startDate + "T00:00:00");
+  const end = new Date(start);
+  if (totalDays > 0) end.setDate(end.getDate() + totalDays - 1);
+  return { remainingMoney, remainingDays, totalDays, percentage, start, end };
+}
+
+function calcWealth() {
+  const bizDaily = businesses.reduce((s, b) => s + (Number(b.amount) || 0), 0);
+  const rentMonthly = rentals.reduce((s, r) => s + (Number(r.amount) || 0), 0);
+  const assetValue = assets.reduce((s, a) => s + (Number(a.value) || 0), 0);
+
+  const bizAccumulated = businesses.reduce((s, b) => s + (Number(b.accumulated) || 0), 0);
+  const rentAccumulated = rentals.reduce((s, r) => s + (Number(r.accumulated) || 0), 0);
+  const totalAccumulated = bizAccumulated + rentAccumulated;
+
+  const monthlyIncome = (bizDaily * 30) + rentMonthly;
+  const totalWealth = saved + assetValue;
+
+  return {
+    bizDaily, rentMonthly, assetValue,
+    monthlyIncome, totalWealth,
+    dailyIncome: bizDaily,
+    bizAccumulated, rentAccumulated, totalAccumulated
+  };
+}
+
+
+/* ============================================
+   RENDER — HOME
+============================================ */
+function renderHome() {
+  const w = calcWealth();
+
+  document.getElementById("heroWealth").textContent = money(w.totalWealth);
+  document.getElementById("heroDaily").textContent = "+" + money(w.dailyIncome);
+  document.getElementById("heroMonthly").textContent = "+" + money(w.monthlyIncome);
+
+  renderAssetBar(w);
+  renderChart();
+
+  document.getElementById("homeSavings").textContent = money(saved);
+  document.getElementById("homeAssets").textContent = money(w.assetValue);
+  document.getElementById("homeBizDaily").textContent = "+" + money(w.bizDaily);
+  document.getElementById("homeRentMonthly").textContent = "+" + money(w.rentMonthly);
+  document.getElementById("homeBizCount").textContent = businesses.length;
+  document.getElementById("homeRentCount").textContent = rentals.length;
+  document.getElementById("homeAccumulated").textContent = "+" + money(w.totalAccumulated);
+}
+
+
+/* ============================================
+   GRAPHIQUE SVG
+============================================ */
+function renderChart() {
+  const container = document.getElementById("chartContainer");
+  const sub = document.getElementById("chartSub");
+  const delta = document.getElementById("chartDelta");
+
+  if (!wealthHistory || wealthHistory.length < 2) {
+    container.innerHTML = `<div class="chart-empty">Pas encore assez de données<br><span style="font-size:9px;opacity:.7;">Reviens dans quelques heures</span></div>`;
+    sub.textContent = "Aucune donnée";
+    delta.textContent = "$0";
+    delta.className = "chart-delta neutral";
+    return;
+  }
+
+  // Filtre sur les 30 derniers jours
+  const now = Date.now();
+  const cutoff = now - 30 * MS_PER_DAY;
+
+  let points = wealthHistory.filter(p => p.t >= cutoff);
+
+  // Si peu de points, on prend tout
+  if (points.length < 2) points = wealthHistory.slice(-30);
+
+  // Assure qu'on a le point actuel
+  const currentWealth = calcWealth().totalWealth;
+  if (points.length === 0 || points[points.length - 1].v !== currentWealth) {
+    points.push({ t: now, v: currentWealth });
+  }
+
+  const values = points.map(p => p.v);
+  const times = points.map(p => p.t);
+  const minV = Math.min(...values);
+  const maxV = Math.max(...values);
+  const range = Math.max(maxV - minV, 1);
+  const minT = Math.min(...times);
+  const maxT = Math.max(...times);
+  const rangeT = Math.max(maxT - minT, 1);
+
+  // Dimensions
+  const W = 400;
+  const H = 140;
+  const padX = 6;
+  const padY = 12;
+
+  // Points du path
+  const coords = points.map(p => {
+    const x = padX + ((p.t - minT) / rangeT) * (W - 2 * padX);
+    const y = H - padY - ((p.v - minV) / range) * (H - 2 * padY);
+    return { x, y, v: p.v, t: p.t };
+  });
+
+  // Construit le path avec courbes lisses (Catmull-Rom → Bézier)
+  function buildSmoothPath(pts) {
+    if (pts.length < 2) return "";
+    let d = `M ${pts[0].x.toFixed(2)} ${pts[0].y.toFixed(2)}`;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[i - 1] || pts[i];
+      const p1 = pts[i];
+      const p2 = pts[i + 1];
+      const p3 = pts[i + 2] || p2;
+
+      const cp1x = p1.x + (p2.x - p0.x) / 6;
+      const cp1y = p1.y + (p2.y - p0.y) / 6;
+      const cp2x = p2.x - (p3.x - p1.x) / 6;
+      const cp2y = p2.y - (p3.y - p1.y) / 6;
+
+      d += ` C ${cp1x.toFixed(2)} ${cp1y.toFixed(2)}, ${cp2x.toFixed(2)} ${cp2y.toFixed(2)}, ${p2.x.toFixed(2)} ${p2.y.toFixed(2)}`;
+    }
+    return d;
+  }
+
+  const linePath = buildSmoothPath(coords);
+  const areaPath = linePath + ` L ${coords[coords.length - 1].x.toFixed(2)} ${H} L ${coords[0].x.toFixed(2)} ${H} Z`;
+
+  const svg = `
+    <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.35"/>
+          <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#1d6ae8"/>
+          <stop offset="100%" stop-color="#76b4ff"/>
+        </linearGradient>
+      </defs>
+
+      <path d="${areaPath}" fill="url(#chartGrad)"/>
+      <path d="${linePath}" fill="none" stroke="url(#lineGrad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+      <circle cx="${coords[coords.length - 1].x.toFixed(2)}" cy="${coords[coords.length - 1].y.toFixed(2)}" r="4" fill="#76b4ff" stroke="#050810" stroke-width="2"/>
+    </svg>
+  `;
+
+  container.innerHTML = svg;
+
+  // Delta sur la période
+  const firstV = points[0].v;
+  const lastV = points[points.length - 1].v;
+  const diff = lastV - firstV;
+  const diffPct = firstV > 0 ? (diff / firstV) * 100 : 0;
+
+  if (diff > 0.01) {
+    delta.textContent = "+" + money(diff);
+    delta.className = "chart-delta positive";
+  } else if (diff < -0.01) {
+    delta.textContent = money(diff);
+    delta.className = "chart-delta neutral";
+  } else {
+    delta.textContent = "$0";
+    delta.className = "chart-delta neutral";
+  }
+
+  const firstDate = new Date(points[0].t);
+  sub.textContent = "Depuis le " + formatDateShort(firstDate);
+}
+
+
+/* ============================================
+   RENDER — SAVINGS
+============================================ */
+function renderSavings() {
+  const c = calcSavings();
+
+  document.getElementById("saved").textContent = money(saved);
+  document.getElementById("targetSmall").textContent = money(target);
+
+  const pb = document.getElementById("progressBar");
+  pb.style.width = c.percentage + "%";
+
+  document.getElementById("percent").textContent =
+    c.percentage.toLocaleString("fr-FR", { maximumFractionDigits: 1 }) + " % accompli";
+  document.getElementById("remaining").textContent = money(c.remainingMoney) + " restants";
+  document.getElementById("currentDay").textContent = currentDay;
+  document.getElementById("daysLeft").textContent = c.remainingDays;
+  document.getElementById("daily").textContent = money(daily);
+  document.getElementById("moneyRemaining").textContent = money(c.remainingMoney);
+  document.getElementById("startDate").textContent = formatDate(c.start);
+  document.getElementById("endDate").textContent = formatDate(c.end);
+
+  const btn = document.getElementById("validateBtn");
+  if (saved >= target) {
+    btn.textContent = "🎉 Challenge terminé !";
+    btn.disabled = false;
+    btn.style.background = "linear-gradient(105deg, #059669, #35d39a)";
+  } else {
+    btn.textContent = "Valider le jour " + (currentDay + 1);
+    btn.disabled = false;
+    btn.style.background = "";
+  }
+
+  document.getElementById("undoBtn").disabled =
+    currentDay <= 0 || !lastValidation;
+
+  document.getElementById("targetInput").value = target;
+  document.getElementById("dailyInput").value = daily;
+  document.getElementById("startInput").value = startDate;
+
+  updateNotifButton();
+}
+
+
+/* ============================================
+   ASSET BAR
+============================================ */
+function renderAssetBar(w) {
+  const bar = document.getElementById("assetBar");
+  const total = w.totalWealth;
+
+  if (total <= 0) {
+    bar.innerHTML = '<div class="asset-bar-empty"></div>';
+    return;
+  }
+
+  const segments = [];
+
+  if (saved > 0) {
+    segments.push({ pct: (saved / total) * 100, color: "linear-gradient(135deg,#3b82f6,#1d4ed8)" });
+  }
+  if (w.assetValue > 0) {
+    segments.push({ pct: (w.assetValue / total) * 100, color: "linear-gradient(135deg,#a78bfa,#7c3aed)" });
+  }
+  const bizValue = w.bizDaily * 365;
+  if (bizValue > 0) {
+    segments.push({ pct: (bizValue / total) * 100, color: "linear-gradient(135deg,#35d39a,#059669)" });
+  }
+  const rentValue = w.rentMonthly * 12;
+  if (rentValue > 0) {
+    segments.push({ pct: (rentValue / total) * 100, color: "linear-gradient(135deg,#fb923c,#ea580c)" });
+  }
+
+  const sum = segments.reduce((s, x) => s + x.pct, 0);
+  if (sum <= 0) {
+    bar.innerHTML = '<div class="asset-bar-empty"></div>';
+    return;
+  }
+
+  bar.innerHTML = segments.map(s => {
+    const pct = (s.pct / sum) * 100;
+    return `<div class="asset-bar-seg" style="flex:0 0 ${pct}%;background:${s.color};"></div>`;
+  }).join("");
+}
+
+
+/* ============================================
+   RENDER — BUSINESS
+============================================ */
+function renderBusiness() {
+  const w = calcWealth();
+
+  document.getElementById("bizTotal").textContent = money(w.bizDaily);
+  document.getElementById("bizCountSub").textContent = businesses.length;
+  document.getElementById("bizCountLabel").textContent = businesses.length;
+  document.getElementById("bizMonthly").textContent = "+" + money(w.bizDaily * 30);
+
+  const list = document.getElementById("bizList");
+
+  if (businesses.length === 0) {
+    list.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">${ICONS.business}</div>
+        <div class="empty-title">Aucune entreprise</div>
+        <div class="empty-text">Ajoute ta première entreprise pour suivre ses revenus quotidiens en temps réel.</div>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = businesses.map(b => {
+    const acc = Number(b.accumulated) || 0;
+    return `
+    <div class="list-item">
+      <div class="list-icon" style="background:${b.photo ? "transparent" : "rgba(53,211,154,.1)"};border:1px solid rgba(53,211,154,.2);color:var(--green-2);">
+        ${b.photo ? `<img src="${b.photo}" alt="">` : ICONS.business}
+      </div>
+      <div class="list-body">
+        <div class="list-name">${escapeHTML(b.name)}</div>
+        <div class="list-meta">
+          <span class="tag tag-day">Par jour</span>
+          <span>${money(b.amount * 30)} / mois</span>
+        </div>
+      </div>
+      <div class="list-value">
+        <div class="amount">+${money(b.amount)}</div>
+        <div class="period">/ jour</div>
+        ${acc > 0.01 ? `<div class="accumulated">+${money(acc)}</div>` : ""}
+      </div>
+      <button class="delete-btn" onclick="deleteItem('business','${b.id}', event)" title="Supprimer">
+        ${ICONS.trash}
+      </button>
+    </div>
+  `;
+  }).join("");
+}
+
+
+/* ============================================
+   RENDER — RENTAL
+============================================ */
+const CATEGORIES = {
+  rental: [
+    { id: "house", icon: "house", label: "Maison" },
+    { id: "apartment", icon: "apartment", label: "Appart" },
+    { id: "car", icon: "car", label: "Voiture" },
+    { id: "moto", icon: "moto", label: "Moto" },
+    { id: "land", icon: "land", label: "Terrain" },
+    { id: "other", icon: "box", label: "Autre" }
+  ],
+  asset: [
+    { id: "house", icon: "house", label: "Maison" },
+    { id: "car", icon: "car", label: "Voiture" },
+    { id: "plane", icon: "plane", label: "Avion" },
+    { id: "boat", icon: "boat", label: "Bateau" },
+    { id: "watch", icon: "watch", label: "Montre" },
+    { id: "other", icon: "gem", label: "Autre" }
+  ]
+};
+
+function getCatIcon(type, id) {
+  const list = CATEGORIES[type] || [];
+  const found = list.find(c => c.id === id);
+  return found ? ICONS[found.icon] : ICONS.box;
+}
+
+function renderRental() {
+  const w = calcWealth();
+
+  document.getElementById("rentTotal").textContent = money(w.rentMonthly);
+  document.getElementById("rentCountSub").textContent = rentals.length;
+  document.getElementById("rentCountLabel").textContent = rentals.length;
+  document.getElementById("rentYearly").textContent = "+" + money(w.rentMonthly * 12);
+
+  const list = document.getElementById("rentList");
+
+  if (rentals.length === 0) {
+    list.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">${ICONS.rental}</div>
+        <div class="empty-title">Aucune location</div>
+        <div class="empty-text">Ajoute un bien que tu mets en location pour suivre tes revenus mensuels.</div>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = rentals.map(r => {
+    const acc = Number(r.accumulated) || 0;
+    return `
+    <div class="list-item">
+      <div class="list-icon" style="background:${r.photo ? "transparent" : "rgba(105,167,255,.1)"};border:1px solid rgba(105,167,255,.2);color:var(--blue-2);">
+        ${r.photo ? `<img src="${r.photo}" alt="">` : getCatIcon("rental", r.category)}
+      </div>
+      <div class="list-body">
+        <div class="list-name">${escapeHTML(r.name)}</div>
+        <div class="list-meta">
+          <span class="tag tag-month">Par mois</span>
+          <span>${money(r.amount * 12)} / an</span>
+        </div>
+      </div>
+      <div class="list-value">
+        <div class="amount">+${money(r.amount)}</div>
+        <div class="period">/ mois</div>
+        ${acc > 0.01 ? `<div class="accumulated">+${money(acc)}</div>` : ""}
+      </div>
+      <button class="delete-btn" onclick="deleteItem('rental','${r.id}', event)" title="Supprimer">
+        ${ICONS.trash}
+      </button>
+    </div>
+  `;
+  }).join("");
+}
+
+
+/* ============================================
+   RENDER — ASSETS
+============================================ */
+function renderAssets() {
+  const w = calcWealth();
+
+  document.getElementById("assetTotal").textContent = money(w.assetValue);
+  document.getElementById("assetCountSub").textContent = assets.length;
+  document.getElementById("assetCountLabel").textContent = assets.length;
+  document.getElementById("assetFortune").textContent = money(w.totalWealth);
+
+  const breakdown = document.getElementById("fortuneBreakdown");
+  const totalRef = Math.max(w.totalWealth, 1);
+
+  breakdown.innerHTML = `
+    <div class="list-item" style="background:linear-gradient(160deg,rgba(53,211,154,.06),rgba(59,130,246,.03));border-color:rgba(53,211,154,.2);">
+      <div class="list-icon" style="background:rgba(53,211,154,.12);border:1px solid rgba(53,211,154,.25);color:var(--green-2);">
+        ${ICONS.trend}
+      </div>
+      <div class="list-body">
+        <div class="list-name">Fortune totale</div>
+        <div class="list-meta"><span>Patrimoine net cumulé</span></div>
+      </div>
+      <div class="list-value">
+        <div class="total">${money(w.totalWealth)}</div>
+        <div class="period">total</div>
+      </div>
+    </div>
+
+    <div class="list-item">
+      <div class="list-icon" style="background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);color:var(--blue-2);">
+        ${ICONS.savings}
+      </div>
+      <div class="list-body">
+        <div class="list-name">Épargne + revenus</div>
+        <div class="list-meta">
+          <span class="tag tag-capital">Capital</span>
+          <span>${((saved / totalRef) * 100).toFixed(0)}%</span>
+        </div>
+      </div>
+      <div class="list-value">
+        <div class="total">${money(saved)}</div>
+        <div class="period">liquide</div>
+      </div>
+    </div>
+
+    <div class="list-item">
+      <div class="list-icon" style="background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.2);color:var(--purple);">
+        ${ICONS.asset}
+      </div>
+      <div class="list-body">
+        <div class="list-name">Valeur des actifs</div>
+        <div class="list-meta">
+          <span class="tag tag-own">Possédé</span>
+          <span>${((w.assetValue / totalRef) * 100).toFixed(0)}%</span>
+        </div>
+      </div>
+      <div class="list-value">
+        <div class="total">${money(w.assetValue)}</div>
+        <div class="period">valeur</div>
+      </div>
+    </div>
+
+    <div class="list-item">
+      <div class="list-icon" style="background:rgba(53,211,154,.1);border:1px solid rgba(53,211,154,.2);color:var(--green-2);">
+        ${ICONS.business}
+      </div>
+      <div class="list-body">
+        <div class="list-name">Revenus entreprises</div>
+        <div class="list-meta">
+          <span class="tag tag-day">Par jour</span>
+          <span>${businesses.length} entrep.</span>
+        </div>
+      </div>
+      <div class="list-value">
+        <div class="amount">+${money(w.bizAccumulated)}</div>
+        <div class="period">cumulés</div>
+      </div>
+    </div>
+
+    <div class="list-item">
+      <div class="list-icon" style="background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.2);color:var(--orange);">
+        ${ICONS.rental}
+      </div>
+      <div class="list-body">
+        <div class="list-name">Revenus locations</div>
+        <div class="list-meta">
+          <span class="tag tag-month">Par mois</span>
+          <span>${rentals.length} bien${rentals.length > 1 ? "s" : ""}</span>
+        </div>
+      </div>
+      <div class="list-value">
+        <div class="amount">+${money(w.rentAccumulated)}</div>
+        <div class="period">cumulés</div>
+      </div>
+    </div>
+  `;
+
+  const list = document.getElementById("assetList");
+
+  if (assets.length === 0) {
+    list.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">${ICONS.asset}</div>
+        <div class="empty-title">Aucun actif</div>
+        <div class="empty-text">Ajoute tes biens (maison, voiture, avion…) pour calculer ta fortune totale.</div>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = assets.map(a => `
+    <div class="list-item">
+      <div class="list-icon" style="background:${a.photo ? "transparent" : "rgba(167,139,250,.1)"};border:1px solid rgba(167,139,250,.2);color:var(--purple);">
+        ${a.photo ? `<img src="${a.photo}" alt="">` : getCatIcon("asset", a.category)}
+      </div>
+      <div class="list-body">
+        <div class="list-name">${escapeHTML(a.name)}</div>
+        <div class="list-meta"><span class="tag tag-own">Possédé</span></div>
+      </div>
+      <div class="list-value">
+        <div class="total">${money(a.value)}</div>
+        <div class="period">valeur</div>
+      </div>
+      <button class="delete-btn" onclick="deleteItem('asset','${a.id}', event)" title="Supprimer">
+        ${ICONS.trash}
+      </button>
+    </div>
+  `).join("");
+}
+
+
+/* ============================================
+   RENDER — HISTORY
+============================================ */
+function renderHistory() {
+  const list = document.getElementById("historyList");
+
+  document.getElementById("historyCount").textContent = challengeHistory.length;
+  document.getElementById("historyTotal").textContent = challengeHistory.length;
+
+  const totalSaved = challengeHistory.reduce((s, h) => s + (Number(h.finalSaved) || 0), 0);
+  const successCount = challengeHistory.filter(h => h.success).length;
+
+  document.getElementById("historySaved").textContent = money(totalSaved);
+  document.getElementById("historySuccess").textContent = successCount;
+
+  if (challengeHistory.length === 0) {
+    list.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">${ICONS.history}</div>
+        <div class="empty-title">Aucun challenge terminé</div>
+        <div class="empty-text">Tes challenges passés apparaîtront ici. Termine ton premier challenge pour le voir apparaître.</div>
+      </div>`;
+    return;
+  }
+
+  // Tri du plus récent au plus ancien
+  const sorted = [...challengeHistory].sort((a, b) => b.endDate - a.endDate);
+
+  list.innerHTML = sorted.map(h => {
+    const endD = new Date(h.endDate);
+    const startD = new Date(h.startDate);
+    const days = Math.max(1, Math.round((h.endDate - h.startDate) / MS_PER_DAY) + 1);
+
+    return `
+    <div class="list-item">
+      <div class="list-icon" style="background:${h.success ? "rgba(53,211,154,.12)" : "rgba(255,92,104,.1)"};border:1px solid ${h.success ? "rgba(53,211,154,.25)" : "rgba(255,92,104,.2)"};color:${h.success ? "var(--green-2)" : "var(--red-2)"};">
+        ${ICONS.trophy}
+      </div>
+      <div class="list-body">
+        <div class="list-name">${money(h.finalSaved)} <span style="color:var(--muted);font-weight:600;">/ ${money(h.target)}</span></div>
+        <div class="list-meta">
+          <span class="tag ${h.success ? 'tag-done' : 'tag-fail'}">${h.success ? 'Réussi' : 'Non terminé'}</span>
+          <span>${days} jour${days > 1 ? 's' : ''}</span>
+        </div>
+      </div>
+      <div class="list-value">
+        <div class="total" style="font-size:11px;color:var(--muted);">${formatDate(endD)}</div>
+        <div class="period">terminé</div>
+      </div>
+    </div>
+  `;
+  }).join("");
+}
+
+
+/* ============================================
+   RENDER ALL
+============================================ */
+function renderAll() {
+  renderHome();
+  renderSavings();
+  renderBusiness();
+  renderRental();
+  renderAssets();
+  renderHistory();
+}
+
+function saveAll() {
+  try {
+    localStorage.setItem(K.target, target);
+    localStorage.setItem(K.daily, daily);
+    localStorage.setItem(K.saved, saved);
+    localStorage.setItem(K.day, currentDay);
+    localStorage.setItem(K.start, startDate);
+    if (lastValidation) localStorage.setItem(K.lastValidation, lastValidation);
+    else localStorage.removeItem(K.lastValidation);
+
+    saveJSON(K.businesses, businesses);
+    saveJSON(K.rentals, rentals);
+    saveJSON(K.assets, assets);
+    saveJSON(K.history, challengeHistory);
+    saveJSON(K.wealthHistory, wealthHistory);
+
+    return true;
+  } catch (err) {
+    console.error("saveAll error:", err);
+
+    if (err.name === "QuotaExceededError" || /quota/i.test(err.message)) {
+      showToast("Stockage plein — supprime des photos");
+    } else {
+      showToast("Erreur de sauvegarde");
+    }
+    return false;
+  }
+}
+
+
+/* ============================================
+   CHALLENGE TERMINÉ
+============================================ */
+function completeChallenge() {
+  const now = Date.now();
+  const startMs = new Date(startDate + "T00:00:00").getTime();
+  const success = saved >= target;
+
+  // Enregistre dans l'historique
+  challengeHistory.push({
+    id: "h_" + now,
+    target: target,
+    daily: daily,
+    startDate: startMs,
+    endDate: now,
+    finalSaved: saved,
+    finalDay: currentDay,
+    success: success
+  });
+
+  // Notification
+  if (success) {
+    sendNotification(
+      "🎉 Challenge réussi !",
+      "Tu as atteint ton objectif de " + money(target) + " en " + currentDay + " jours !"
+    );
+  } else {
+    sendNotification(
+      "Challenge terminé",
+      "Tu as terminé avec " + money(saved) + " sur un objectif de " + money(target) + "."
+    );
+  }
+
+  saveAll();
+}
+
+function showSuccessModal() {
+  document.getElementById("successTarget").textContent = money(target);
+  document.getElementById("successDays").textContent = currentDay;
+  openModal("successModal");
+}
+
+function startNewFromSuccess(event) {
+  closeModal("successModal", event);
+  setTimeout(() => {
+    document.getElementById("newTargetInput").value = target || 1500;
+    document.getElementById("newDailyInput").value = daily || 3;
+    document.getElementById("newStartInput").value = getToday();
+    document.getElementById("newSavedInput").value = 0;
+    document.getElementById("newDayInput").value = 0;
+    openModal("resetFinalModal", event);
+  }, 300);
+}
+
+
+/* ============================================
+   SAVINGS ACTIONS
+============================================ */
+function validateDay() {
+  // Si déjà atteint, ouvrir le modal de succès
+  if (saved >= target) {
+    showSuccessModal();
+    return;
+  }
+
+  const today = getToday();
+  if (lastValidation === today) { showToast("Journée déjà validée"); return; }
+
+  haptic("heavy");
+
+  localStorage.setItem(K.prevSaved, saved);
+  localStorage.setItem(K.prevDay, currentDay);
+  localStorage.setItem(K.prevDate, lastValidation);
+
+  const previousSaved = saved;
+  saved = Math.min(target, saved + daily);
+  currentDay++;
+  lastValidation = today;
+
+  saveAll();
+  recordWealthPoint();
+  renderAll();
+
+  // Détection de fin de challenge
+  if (previousSaved < target && saved >= target) {
+    // On vient d'atteindre l'objectif !
+    setTimeout(() => {
+      completeChallenge();
+      showSuccessModal();
+      renderAll();
+    }, 400);
+  } else {
+    showToast("Jour " + currentDay + " validé · +" + money(daily));
+  }
+}
+
+function requestUndo(event) {
+  if (currentDay <= 0) { showToast("Aucune validation à annuler"); return; }
+
+  haptic("medium");
+
+  const prevSaved = Number(localStorage.getItem(K.prevSaved));
+  const prevDay = Number(localStorage.getItem(K.prevDay));
+
+  document.getElementById("undoText").innerHTML =
+    "Le tracker reviendra à <strong>" + money(prevSaved) +
+    "</strong> et au <strong>jour " + prevDay + "</strong>.";
+
+  openModal("undoModal", event);
+}
+
+function undoDay() {
+  const prevSaved = localStorage.getItem(K.prevSaved);
+  const prevDay = localStorage.getItem(K.prevDay);
+  const prevDate = localStorage.getItem(K.prevDate);
+
+  if (prevSaved === null) { showToast("Impossible d'annuler"); return; }
+
+  haptic("medium");
+
+  saved = Number(prevSaved);
+  currentDay = Number(prevDay);
+  lastValidation = prevDate || "";
+
+  localStorage.removeItem(K.prevSaved);
+  localStorage.removeItem(K.prevDay);
+  localStorage.removeItem(K.prevDate);
+
+  saveAll();
+  renderAll();
+  closeModal("undoModal");
+  showToast("Dernière validation annulée");
+}
+
+
+/* ============================================
+   SETTINGS
+============================================ */
+let settingsOpen = false;
+
+function toggleSettings() {
+  haptic("light");
+  settingsOpen = !settingsOpen;
+  const body = document.getElementById("settingsBody");
+  const arrow = document.getElementById("settingsArrow");
+  body.classList.toggle("open", settingsOpen);
+  arrow.style.transform = settingsOpen ? "rotate(180deg)" : "rotate(0)";
+  arrow.style.background = settingsOpen ? "rgba(59,130,246,.15)" : "rgba(255,255,255,.04)";
+  arrow.style.color = settingsOpen ? "var(--blue-2)" : "var(--muted)";
+}
+
+function saveSettings() {
+  const newTarget = Number(document.getElementById("targetInput").value);
+  const newDaily = Number(document.getElementById("dailyInput").value);
+  const newStart = document.getElementById("startInput").value;
+
+  if (!newTarget || newTarget <= 0) { showToast("Objectif invalide"); return; }
+  if (!newDaily || newDaily <= 0) { showToast("Montant quotidien invalide"); return; }
+  if (!newStart) { showToast("Date de début invalide"); return; }
+
+  haptic("medium");
+
+  target = newTarget;
+  daily = newDaily;
+  startDate = newStart;
+  if (saved > target) saved = target;
+
+  saveAll();
+  renderAll();
+  showToast("Paramètres mis à jour");
+}
+
+
+/* ============================================
+   RESET / NOUVEAU CHALLENGE
+============================================ */
+function openResetModal(event) {
+  haptic("medium");
+
+  document.getElementById("resetSavedPreview").textContent = money(saved);
+  document.getElementById("resetDayPreview").textContent = currentDay;
+
+  openModal("resetModal", event);
+}
+
+function secondResetConfirm(event) {
+  // Enregistre le challenge actuel dans l'historique
+  const now = Date.now();
+  const startMs = new Date(startDate + "T00:00:00").getTime();
+  const success = saved >= target;
+
+  // On n'enregistre que si le challenge a au moins 1 jour validé
+  if (currentDay > 0 || saved > 0) {
+    challengeHistory.push({
+      id: "h_" + now,
+      target: target,
+      daily: daily,
+      startDate: startMs,
+      endDate: now,
+      finalSaved: saved,
+      finalDay: currentDay,
+      success: success
+    });
+    saveAll();
+  }
+
+  captureMorphOrigin(event);
+  closeModal("resetModal", event);
+
+  setTimeout(() => {
+    document.getElementById("newTargetInput").value = target || 1500;
+    document.getElementById("newDailyInput").value = daily || 3;
+    document.getElementById("newStartInput").value = getToday();
+    document.getElementById("newSavedInput").value = 0;
+    document.getElementById("newDayInput").value = 0;
+
+    openModal("resetFinalModal", event);
+  }, 260);
+}
+
+function startNewChallenge() {
+  const newTarget = Number(document.getElementById("newTargetInput").value);
+  const newDaily = Number(document.getElementById("newDailyInput").value);
+  const newStart = document.getElementById("newStartInput").value;
+  const newSaved = Number(document.getElementById("newSavedInput").value) || 0;
+  const newDay = Number(document.getElementById("newDayInput").value) || 0;
+
+  if (!newTarget || newTarget <= 0) { showToast("Objectif invalide"); return; }
+  if (!newDaily || newDaily <= 0) { showToast("Montant quotidien invalide"); return; }
+  if (!newStart) { showToast("Date de début invalide"); return; }
+  if (newSaved < 0) { showToast("Épargne de départ invalide"); return; }
+  if (newDay < 0) { showToast("Jour de départ invalide"); return; }
+
+  haptic("heavy");
+
+  target = newTarget;
+  daily = newDaily;
+  startDate = newStart;
+  saved = newSaved;
+  currentDay = newDay;
+  lastValidation = "";
+
+  localStorage.setItem(K.lastTick, String(Date.now()));
+
+  localStorage.removeItem(K.prevSaved);
+  localStorage.removeItem(K.prevDay);
+  localStorage.removeItem(K.prevDate);
+
+  saveAll();
+  recordWealthPoint();
+  renderAll();
+
+  closeModal("resetFinalModal");
+  showToast("Nouveau challenge démarré");
+}
+
+
+/* ============================================
+   ADD MODAL
+============================================ */
+let addType = "business";
+let selectedCategory = "house";
+let photoData = "";
+
+function openAddModal(type, event) {
+  addType = type;
+  selectedCategory = type === "rental" ? "house" : type === "asset" ? "house" : "";
+  photoData = "";
+
+  const title = document.getElementById("addModalTitle");
+  const sub = document.getElementById("addModalSub");
+  const nameLabel = document.getElementById("nameLabel");
+  const amountLabel = document.getElementById("amountLabel");
+  const valueGroup = document.getElementById("valueGroup");
+  const catGroup = document.getElementById("catGroup");
+
+  document.getElementById("addName").value = "";
+  document.getElementById("addAmount").value = "";
+  document.getElementById("addValue").value = "";
+  document.getElementById("photoInput").value = "";
+  document.getElementById("photoPreview").innerHTML = `
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2"/>
+      <circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+    </svg>`;
+
+  if (type === "business") {
+    title.textContent = "Nouvelle entreprise";
+    sub.textContent = "Ajoute une entreprise et son revenu quotidien";
+    nameLabel.textContent = "Nom de l'entreprise";
+    amountLabel.textContent = "Revenu par jour ($)";
+    catGroup.style.display = "none";
+    valueGroup.style.display = "none";
+    document.getElementById("addName").placeholder = "Ex: Ma boutique";
+    document.getElementById("addAmount").placeholder = "0.00";
+  } else if (type === "rental") {
+    title.textContent = "Nouvelle location";
+    sub.textContent = "Ajoute un bien que tu mets en location";
+    nameLabel.textContent = "Nom du bien";
+    amountLabel.textContent = "Revenu par mois ($)";
+    catGroup.style.display = "block";
+    valueGroup.style.display = "none";
+    document.getElementById("addName").placeholder = "Ex: Maison à Paris";
+    document.getElementById("addAmount").placeholder = "0.00";
+    buildCatPicker("rental");
+  } else if (type === "asset") {
+    title.textContent = "Nouvel actif";
+    sub.textContent = "Ajoute un bien que tu possèdes";
+    nameLabel.textContent = "Nom de l'actif";
+    amountLabel.textContent = "Revenu généré ($) — optionnel";
+    catGroup.style.display = "block";
+    valueGroup.style.display = "block";
+    document.getElementById("addName").placeholder = "Ex: Villa, Ferrari…";
+    document.getElementById("addAmount").placeholder = "0.00";
+    document.getElementById("addValue").placeholder = "0.00";
+    buildCatPicker("asset");
+  }
+
+  openModal("addModal", event);
+  setTimeout(() => document.getElementById("addName").focus(), 500);
+}
+
+function buildCatPicker(type) {
+  const list = CATEGORIES[type] || [];
+  document.getElementById("catPicker").innerHTML = list.map(c => `
+    <button type="button" class="cat-option ${selectedCategory === c.id ? "selected" : ""}" onclick="selectCat('${c.id}')">
+      ${ICONS[c.icon]}
+      <span class="cat-label">${c.label}</span>
+    </button>
+  `).join("");
+}
+
+function selectCat(id) {
+  haptic("light");
+  selectedCategory = id;
+  const type = addType === "rental" ? "rental" : "asset";
+  buildCatPicker(type);
+}
+
+function handlePhoto(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+
+  if (file.size > 20 * 1024 * 1024) {
+    showToast("Image trop lourde (max 20 Mo)");
+    input.value = "";
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = async (e) => {
+    try {
+      const compressed = await compressImage(e.target.result, PHOTO_MAX_SIZE, PHOTO_QUALITY);
+      photoData = compressed;
+
+      document.getElementById("photoPreview").innerHTML =
+        `<img src="${photoData}" alt="">`;
+
+      const ko = Math.round(photoData.length * 0.75 / 1024);
+      showToast("Photo optimisée · ~" + ko + " Ko");
+    } catch (err) {
+      console.error("Photo error:", err);
+      showToast("Erreur de traitement de la photo");
+    }
+  };
+  reader.onerror = () => showToast("Impossible de lire l'image");
+  reader.readAsDataURL(file);
+}
+
+function confirmAdd(event) {
+  try {
+    if (event) event.stopPropagation();
+
+    const name = (document.getElementById("addName").value || "").trim();
+    const amount = Number(document.getElementById("addAmount").value) || 0;
+    const value = Number(document.getElementById("addValue").value) || 0;
+
+    if (!name) { showToast("Entre un nom"); return; }
+
+    const now = Date.now();
+    const rnd = Math.random().toString(36).slice(2, 7);
+
+    let newItem = null;
+
+    if (addType === "business") {
+      if (amount <= 0) { showToast("Entre un revenu journalier valide"); return; }
+      newItem = {
+        id: "b_" + now + "_" + rnd,
+        name, amount,
+        photo: photoData,
+        accumulated: 0,
+        createdAt: now
+      };
+      businesses.push(newItem);
+    } else if (addType === "rental") {
+      if (amount <= 0) { showToast("Entre un revenu mensuel valide"); return; }
+      newItem = {
+        id: "r_" + now + "_" + rnd,
+        name, amount,
+        category: selectedCategory || "house",
+        photo: photoData,
+        accumulated: 0,
+        createdAt: now
+      };
+      rentals.push(newItem);
+    } else if (addType === "asset") {
+      if (value <= 0) { showToast("Entre une valeur estimée valide"); return; }
+      newItem = {
+        id: "a_" + now + "_" + rnd,
+        name, value,
+        amount,
+        category: selectedCategory || "house",
+        photo: photoData,
+        createdAt: now
+      };
+      assets.push(newItem);
+    }
+
+    haptic("heavy");
+
+    localStorage.setItem(K.lastTick, String(Date.now()));
+
+    renderAll();
+    recordWealthPoint();
+    closeModal("addModal");
+
+    setTimeout(() => {
+      const ok = saveAll();
+      if (!ok) {
+        if (addType === "business") businesses = businesses.filter(x => x.id !== newItem.id);
+        if (addType === "rental") rentals = rentals.filter(x => x.id !== newItem.id);
+        if (addType === "asset") assets = assets.filter(x => x.id !== newItem.id);
+        renderAll();
+      }
+    }, 30);
+
+    showToast("Ajouté avec succès");
+  } catch (err) {
+    console.error("confirmAdd error:", err);
+    showToast("Erreur : " + err.message);
+  }
+}
+
+function deleteItem(type, id, event) {
+  try {
+    if (event) event.stopPropagation();
+    haptic("medium");
+
+    if (type === "business") {
+      const item = businesses.find(b => b.id === id);
+      if (item) {
+        const acc = Number(item.accumulated) || 0;
+        if (acc > 0) saved = Math.max(0, saved - acc);
+      }
+      businesses = businesses.filter(b => b.id !== id);
+    } else if (type === "rental") {
+      const item = rentals.find(r => r.id === id);
+      if (item) {
+        const acc = Number(item.accumulated) || 0;
+        if (acc > 0) saved = Math.max(0, saved - acc);
+      }
+      rentals = rentals.filter(r => r.id !== id);
+    } else if (type === "asset") {
+      assets = assets.filter(a => a.id !== id);
+    }
+
+    localStorage.setItem(K.lastTick, String(Date.now()));
+
+    renderAll();
+    recordWealthPoint();
+    setTimeout(() => saveAll(), 0);
+
+    showToast("Élément supprimé");
+  } catch (err) {
+    console.error("deleteItem error:", err);
+    showToast("Erreur lors de la suppression");
+  }
+}
+
+
+/* ============================================
+   TOAST
+============================================ */
+let toastTimer;
+
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+  toast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove("show"), 2200);
+}
+
+
+/* ============================================
+   MODAL BACKDROP
+============================================ */
+document.querySelectorAll(".modal").forEach(m => {
+  m.addEventListener("click", e => {
+    if (e.target === m) {
+      morphOrigin = { x: 50, y: 95 };
+      const card = m.querySelector(".modal-card");
+      applyMorphOrigin(card);
+      m.classList.remove("show");
+      m.classList.add("closing");
+      setTimeout(() => m.classList.remove("closing"), 460);
+    }
+  });
+});
+
+
+/* ============================================
+   NETTOYAGE ANCIENNES PHOTOS
+============================================ */
+async function cleanupOldPhotos() {
+  let changed = false;
+
+  async function processItem(item) {
+    if (!item.photo) return;
+    if (item.photo.length < 40000) return;
+
+    try {
+      const compressed = await compressImage(item.photo, PHOTO_MAX_SIZE, PHOTO_QUALITY);
+      if (compressed !== item.photo && compressed.length < item.photo.length) {
+        item.photo = compressed;
+        changed = true;
+      }
+    } catch (e) {}
+  }
+
+  const all = [...businesses, ...rentals, ...assets];
+  await Promise.all(all.map(processItem));
+
+  if (changed) saveAll();
+}
+
+
+/* ============================================
+   EXPOSITION GLOBALE
+============================================ */
+window.switchScreen = switchScreen;
+window.openAddModal = openAddModal;
+window.closeModal = closeModal;
+window.confirmAdd = confirmAdd;
+window.selectCat = selectCat;
+window.handlePhoto = handlePhoto;
+window.deleteItem = deleteItem;
+window.validateDay = validateDay;
+window.requestUndo = requestUndo;
+window.undoDay = undoDay;
+window.toggleSettings = toggleSettings;
+window.saveSettings = saveSettings;
+window.openResetModal = openResetModal;
+window.secondResetConfirm = secondResetConfirm;
+window.startNewChallenge = startNewChallenge;
+window.showSuccessModal = showSuccessModal;
+window.startNewFromSuccess = startNewFromSuccess;
+window.requestNotifPermission = requestNotifPermission;
+window.showToast = showToast;
+
+
+/* ============================================
+   INIT
+============================================ */
+(async function init() {
+  try {
+    await cleanupOldPhotos();
+  } catch (e) {}
+
+  applyAutomaticIncome();
+  recordWealthPoint();
+  renderAll();
+  updateNotifButton();
+
+  // Enregistre un point d'historique au démarrage
+  saveAll();
+})();
+
+
+/* ============================================
+   RAFRAÎCHISSEMENTS
+============================================ */
+setInterval(() => {
+  applyAutomaticIncome();
+  recordWealthPoint();
+  renderAll();
+}, 5000);
+
+// Enregistre un point d'historique toutes les 30 min
+setInterval(() => {
+  recordWealthPoint();
+  saveAll();
+}, 30 * 60 * 1000);
+
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) {
+    applyAutomaticIncome();
+    recordWealthPoint();
+    renderAll();
+  }
+});
+
+window.addEventListener("focus", () => {
+  applyAutomaticIncome();
+  recordWealthPoint();
+  renderAll();
+});
+
+</script>
+
+</body>
+</html>
